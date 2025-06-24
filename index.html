@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="title">Online Qarz Daftari</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Qarz Daftari" />
+    <meta name="theme-color" content="#00695c" />
+    <link rel="manifest" href="/manifest.json" />
+    <link
+      rel="apple-touch-icon"
+      href="https://via.placeholder.com/192.png?text=Qarz+Daftari"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://via.placeholder.com/32.png?text=Qarz+Daftari"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        --green: #00695c;
+        --light-bg: rgba(255, 255, 255, 0.8);
+        --dark-bg: rgba(30, 30, 30, 0.9);
+        --summary-bg: linear-gradient(135deg, #e8f5e9, #fffde7);
+      }
+      body.light {
+        background: url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80")
+          no-repeat center center fixed; /* O‘rmon manzarasi */
+        background-size: cover;
+        color: #333;
+      }
+      body.dark {
+        background: url("https://avatars.mds.yandex.net/i?id=acc69582fc97bca81065cf54d8cbca1387910760-12612451-images-thumbs&n=13")
+          no-repeat center center fixed; /* Yangi rasm */
+        background-size: cover;
+        color: #ddd; /* Yozuvlarni ozgina oqartirish */
+      }
+      .login-container {
+        max-width: 400px;
+        margin: 100px auto;
+        background: var(--light-bg);
+        padding: 30px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        border: 1px solid #ccc;
+      }
+      .login-container .login-input {
+        display: flex;
+        align-items: center;
+      }
+      body.dark .login-container {
+        background: var(--dark-bg);
+        border: 1px solid #444; /* Dark modda qora ramka */
+      }
+      .container {
+        max-width: 1000px;
+        margin: auto;
+        background: var(--light-bg);
+        padding: 30px;
+        margin-top: 30px;
+        border-radius: 16px;
+        border: 1px solid #ccc;
+      }
+      body.dark .container {
+        background: var(--dark-bg);
+        border: 1px solid #444; /* Dark modda qora ramka */
+      }
+      .form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      input,
+      select,
+      button {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+        flex: 1;
+      }
+      body.dark input,
+      body.dark select,
+      body.dark button {
+        border: 1px solid #444; /* Dark modda qora ramka */
+      }
+      button {
+        background: var(--green);
+        color: white;
+        cursor: pointer;
+        border: none;
+      }
+      button:hover {
+        background: #004d40;
+      }
+      table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid #ccc;
+      }
+      body.dark table {
+        background: var(--dark-bg);
+        border: 1px solid #444; /* Dark modda qora ramka */
+      }
+      th,
+      td {
+        padding: 14px;
+        border-bottom: 1px solid #ccc;
+        text-align: left;
+      }
+      body.dark th,
+      body.dark td {
+        border-bottom: 1px solid #444; /* Dark modda qora ramka */
+      }
+      th {
+        background: var(--green);
+        color: white;
+      }
+      .delete-btn {
+        background: red;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: none;
+      }
+      .delete-btn:hover {
+        background: darkred;
+      }
+      #summary {
+        margin-top: 30px;
+        padding: 20px;
+        background: var(--summary-bg);
+        border-radius: 12px;
+        border: 1px solid #ccc;
+      }
+      body.dark #summary {
+        background: var(--dark-bg);
+        border: 1px solid #444; /* Dark modda qora ramka */
+      }
+      #summary h2 {
+        margin-bottom: 15px;
+        color: var(--green);
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 10px;
+      }
+      .theme-toggle {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        transition: opacity 0.3s ease, background-color 0.3s ease;
+        padding: 5px;
+        border-radius: 50%;
+      }
+      .theme-toggle:hover {
+        opacity: 0.8;
+        background-color: rgba(0, 105, 92, 0.2);
+      }
+      .theme-toggle:active {
+        opacity: 1;
+        background-color: rgba(0, 105, 92, 0.4);
+      }
+    </style>
+  </head>
+  <body class="light">
+    <div class="topbar">
+      <div><button class="theme-toggle" onclick="toggleMode()">☀️</button></div>
+      <div>
+        <select id="langSelect" onchange="setLang(this.value)">
+          <option value="uz">🇺🇿 UZ</option>
+          <option value="ru">🇷🇺 RU</option>
+          <option value="en">🇬🇧 EN</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="login" class="login-container">
+      <h2 data-i18n="login_title">Qarz Daftari – Kirish</h2>
+      <div class="login-input">
+        <input type="password" id="password" placeholder="Parolni kiriting" />
+        <button onclick="togglePassword()">
+          👁 <span data-i18n="show_pwd"></span>
+        </button>
+        <button onclick="checkPassword()" data-i18n="login_btn">Kirish</button>
+      </div>
+      <p id="error" style="color: red"></p>
+    </div>
+
+    <div id="mainApp" style="display: none">
+      <div class="container">
+        <div class="form">
+          <input
+            type="text"
+            id="borrower"
+            data-i18n-placeholder="new_borrower"
+          />
+          <input type="tel" id="phone" placeholder="Telefon raqami" />
+          <input type="date" id="due" data-i18n-placeholder="due_date" />
+          <input type="number" id="amount" data-i18n-placeholder="amount" />
+          <button onclick="addBorrower()" data-i18n="amount">
+            Qarzdor qo‘shish
+          </button>
+        </div>
+        <div style="overflow-x: auto; max-width: 100%">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="t_borrower">Qarzdor</th>
+                <th data-i18n="t_total">Jami qarz</th>
+                <th data-i18n="t_taken_date">Qarz bo‘lgan sana</th>
+                <th data-i18n="t_due_date">Qaytarish sanasi</th>
+                <th data-i18n="t_actions">Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="debtTable"></tbody>
+          </table>
+        </div>
+
+        <canvas id="chart" height="100"></canvas>
+
+        <div id="summary">
+          <h2 data-i18n="summary">Yakuniy Maʼlumotlar</h2>
+          <p>
+            <strong data-i18n="s_total">Jami qarz:</strong>
+            <span id="totalDebt">0</span> so'm
+          </p>
+          <p>
+            <strong data-i18n="s_max">Eng ko‘p qarzdor:</strong>
+            <span id="maxBorrower">-</span>
+          </p>
+          <p>
+            <strong data-i18n="s_min">Eng kam qarzdor:</strong>
+            <span id="minBorrower">-</span>
+          </p>
+          <p>
+            <strong data-i18n="s_count">Qarzdorlar soni:</strong>
+            <span id="borrowerCount">0</span> ta
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Service Worker registration for PWA
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("Service Worker registered!", reg))
+            .catch((err) =>
+              console.error("Service Worker registration failed:", err)
+            )
+        })
+      }
+
+      // IndexedDB setup
+      let db
+      const dbRequest = indexedDB.open("QarzDaftari", 2)
+      dbRequest.onerror = () => console.error("IndexedDB error")
+      dbRequest.onupgradeneeded = (event) => {
+        db = event.target.result
+        if (!db.objectStoreNames.contains("borrowers")) {
+          const store = db.createObjectStore("borrowers", { keyPath: "name" })
+          store.createIndex("name", "name", { unique: true })
+        }
+      }
+      dbRequest.onsuccess = (event) => {
+        db = event.target.result
+        loadData()
+      }
+
+      const correctPassword = "1234"
+      function togglePassword() {
+        const input = document.getElementById("password")
+        if (input) {
+          input.type = input.type === "password" ? "text" : "password"
+        } else {
+          console.error("Password input not found")
+        }
+      }
+      function checkPassword() {
+        const input = document.getElementById("password")
+        const error = document.getElementById("error")
+        if (input && error) {
+          if (input.value === correctPassword) {
+            document.getElementById("login").style.display = "none"
+            document.getElementById("mainApp").style.display = "block"
+            loadData()
+          } else {
+            error.textContent =
+              currentLangData["wrong_pwd"] || "Parol noto‘g‘ri!"
+          }
+        } else {
+          console.error("Password input or error element not found")
+        }
+      }
+      function toggleMode() {
+        const isDark = document.body.classList.contains("dark")
+        const theme = isDark ? "light" : "dark"
+        document.body.className = theme
+        const themeButton = document.querySelector(".theme-toggle")
+        if (themeButton) {
+          themeButton.textContent = isDark ? "☀️" : "🌙"
+        }
+        localStorage.setItem("theme", theme)
+      }
+      ;(function loadTheme() {
+        const t = localStorage.getItem("theme") || "light"
+        document.body.className = t
+        const themeButton = document.querySelector(".theme-toggle")
+        if (themeButton) {
+          themeButton.textContent = t === "light" ? "☀️" : "🌙"
+        }
+      })()
+      let borrowers = {}
+      function loadData() {
+        if (!db) {
+          console.error("Database not initialized")
+          return
+        }
+        const transaction = db.transaction(["borrowers"], "readonly")
+        const store = transaction.objectStore("borrowers")
+        const request = store.getAll()
+        request.onsuccess = () => {
+          borrowers = request.result.reduce((acc, item) => {
+            acc[item.name] = {
+              total: item.total || 0,
+              phone: item.phone || "",
+              takenDate: item.takenDate || "Qarz bo‘lgan sana ma’lum emas",
+              dueDate: item.dueDate || "Qaytarish sanasi ma’lum emas",
+            }
+            return acc
+          }, {})
+          updateSelect()
+          updateTable()
+          updateSummary()
+          updateChart()
+        }
+        request.onerror = () =>
+          console.error("Failed to load data from IndexedDB")
+      }
+      function saveData() {
+        if (!db) {
+          console.error("Database not initialized")
+          return
+        }
+        const transaction = db.transaction(["borrowers"], "readwrite")
+        const store = transaction.objectStore("borrowers")
+        Object.entries(borrowers).forEach(([name, data]) => {
+          store.put({
+            name,
+            total: data.total,
+            phone: data.phone,
+            takenDate: data.takenDate,
+            dueDate: data.dueDate,
+          })
+        })
+      }
+      function addBorrower() {
+        const name = document.getElementById("borrower")?.value.trim()
+        const phone = document.getElementById("phone")?.value.trim()
+        const amount = parseInt(document.getElementById("amount")?.value) || 0
+        const dueDate =
+          document.getElementById("due")?.value ||
+          "Qaytarish sanasi ma’lum emas"
+        const takenDate = new Date().toISOString().split("T")[0] // Joriy sana avtomatik belgilanishi
+        if (name && !borrowers[name]) {
+          borrowers[name] = { total: amount, phone, takenDate, dueDate }
+          saveData()
+          updateSelect()
+          updateTable()
+          updateSummary()
+          updateChart()
+          document.getElementById("borrower").value = ""
+          document.getElementById("phone").value = ""
+          document.getElementById("amount").value = ""
+          document.getElementById("due").value = ""
+          const borrowerSelect = document.getElementById("borrowerSelect")
+          if (borrowerSelect) {
+            borrowerSelect.value = name
+          }
+        } else {
+          console.error("Invalid borrower name or already exists")
+        }
+      }
+      function addDebt() {
+        const name = document.getElementById("borrowerSelect")?.value
+        const dueDate = "Qaytarish sanasi ma’lum emas" // Faqat birinchi qismda kiritilgan sana ishlatiladi
+        const takenDate = new Date().toISOString().split("T")[0] // Joriy sana avtomatik belgilanishi
+        if (name) {
+          borrowers[name].takenDate = takenDate
+          borrowers[name].dueDate = dueDate
+          saveData()
+          updateTable()
+          updateSummary()
+          updateChart()
+        } else {
+          console.error("Invalid borrower or amount")
+        }
+      }
+      function subtractDebt() {
+        const name = document.getElementById("borrowerSelect")?.value
+        if (name) {
+          borrowers[name].total = Math.max(0, borrowers[name].total)
+          saveData()
+          updateTable()
+          updateSummary()
+          updateChart()
+        } else {
+          console.error("Invalid borrower or amount")
+        }
+      }
+      function deleteBorrower(name) {
+        if (!name || !borrowers[name]) {
+          console.error("Invalid borrower name")
+          return
+        }
+        delete borrowers[name]
+        if (db) {
+          const transaction = db.transaction(["borrowers"], "readwrite")
+          const store = transaction.objectStore("borrowers")
+          store.delete(name)
+        }
+        updateSelect()
+        updateTable()
+        updateSummary()
+        updateChart()
+      }
+      function updateSelect() {
+        const select = document.getElementById("borrowerSelect")
+        if (!select) {
+          console.error("Borrower select not found")
+          return
+        }
+        select.innerHTML =
+          '<option value="" data-i18n="select_borrower">Qarzdorni tanlang</option>'
+        Object.keys(borrowers).forEach((name) => {
+          const option = document.createElement("option")
+          option.value = name
+          option.textContent = name
+          select.appendChild(option)
+        })
+      }
+      function updateTable() {
+        const tbody = document.getElementById("debtTable")
+        if (!tbody) {
+          console.error("Debt table not found")
+          return
+        }
+        tbody.innerHTML = ""
+        Object.keys(borrowers).forEach((name) => {
+          const row = document.createElement("tr")
+          row.innerHTML = `
+            <td>${name}<br><a href="tel:${borrowers[name].phone}" onclick="window.location.href='tel:${borrowers[name].phone}'; return false;">${borrowers[name].phone}</a></td>
+            <td>${borrowers[name].total.toLocaleString()} so'm</td>
+            <td>${borrowers[name].takenDate}</td>
+            <td>${borrowers[name].dueDate}</td>
+            <td><button class="delete-btn" onclick="deleteBorrower('${name}')">❌</button></td>`
+          tbody.appendChild(row)
+        })
+      }
+      function updateSummary() {
+        const names = Object.keys(borrowers)
+        const totals = names.map((n) => borrowers[n].total)
+        const totalDebt = totals.reduce((a, b) => a + b, 0)
+        const totalDebtElement = document.getElementById("totalDebt")
+        const borrowerCountElement = document.getElementById("borrowerCount")
+        const maxBorrowerElement = document.getElementById("maxBorrower")
+        const minBorrowerElement = document.getElementById("minBorrower")
+        if (totalDebtElement)
+          totalDebtElement.textContent = totalDebt.toLocaleString()
+        if (borrowerCountElement)
+          borrowerCountElement.textContent = names.length
+        if (names.length) {
+          const max = Math.max(...totals)
+          const min = Math.min(...totals)
+          if (maxBorrowerElement)
+            maxBorrowerElement.textContent =
+              names.find((n) => borrowers[n].total === max) || "-"
+          if (minBorrowerElement)
+            minBorrowerElement.textContent =
+              names.find((n) => borrowers[n].total === min) || "-"
+        } else {
+          if (maxBorrowerElement) maxBorrowerElement.textContent = "-"
+          if (minBorrowerElement) minBorrowerElement.textContent = "-"
+        }
+      }
+      function searchBorrower() {
+        const searchInput = document.getElementById("searchInput")
+        const select = document.getElementById("borrowerSelect")
+        if (!searchInput || !select) {
+          console.error("Search input or select not found")
+          return
+        }
+        const value = searchInput.value.toLowerCase()
+        const rows = document.querySelectorAll("#debtTable tr")
+
+        rows.forEach((row) => {
+          const name = row.children[0].textContent.toLowerCase()
+          const visible = name.includes(value)
+          row.style.display = visible ? "" : "none"
+        })
+
+        const matchingNames = Object.keys(borrowers).filter((name) =>
+          name.toLowerCase().includes(value)
+        )
+        select.value = matchingNames.length ? matchingNames[0] : ""
+      }
+
+      // Chart.js setup
+      let chartInstance = null
+      function updateChart() {
+        const ctx = document.getElementById("chart")?.getContext("2d")
+        if (!ctx) {
+          console.error("Chart canvas not found")
+          return
+        }
+
+        const names = Object.keys(borrowers)
+        const totals = names.map((n) => borrowers[n].total)
+
+        if (chartInstance) {
+          chartInstance.destroy()
+        }
+
+        chartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: names,
+            datasets: [
+              {
+                label: currentLangData["t_total"] || "Jami qarz",
+                data: totals,
+                backgroundColor: "rgba(0, 105, 92, 0.6)",
+                borderColor: "rgba(0, 105, 92, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        })
+      }
+
+      // Multilang setup
+      const translations = {
+        uz: {
+          title: "Online Qarz Daftari",
+          login_title: "Qarz Daftari – Kirish",
+          login_btn: "Kirish",
+          wrong_pwd: "Parol noto‘g‘ri!",
+          search: "Qarzdorni qidiring",
+          new_borrower: "Yangi qarzdor nomi",
+          amount: "Qarz miqdori",
+          due_date: "Qaytarish sanasi",
+          add_borrower: "Qarzdor qo‘shish",
+          add_debt: "Qarz qo‘shish",
+          sub_debt: "Qarz ayirish",
+          select_borrower: "Qarzdorni tanlang",
+          t_borrower: "Qarzdor",
+          t_total: "Jami qarz",
+          t_taken_date: "Qarz bo‘lgan sana",
+          t_due_date: "Qaytarish sanasi",
+          t_actions: "Amallar",
+          summary: "Yakuniy Maʼlumotlar",
+          s_total: "Jami qarz:",
+          s_max: "Eng ko‘p qarzdor:",
+          s_min: "Eng kam qarzdor:",
+          s_count: "Qarzdorlar soni:",
+        },
+        ru: {
+          title: "Онлайн Долговая Книга",
+          login_title: "Долговая Книга – Вход",
+          show_pwd: "Показать пароль",
+          login_btn: "Войти",
+          wrong_pwd: "Неверный пароль!",
+          search: "Поиск должника",
+          new_borrower: "Имя нового должника",
+          amount: "Сумма долга",
+          due_date: "Дата возврата",
+          add_borrower: "Добавить должника",
+          add_debt: "Добавить долг",
+          sub_debt: "Уменьшить долг",
+          select_borrower: "Выберите должника",
+          t_borrower: "Должник",
+          t_total: "Общий долг",
+          t_taken_date: "Дата долга",
+          t_due_date: "Дата возврата",
+          t_actions: "Действия",
+          summary: "Итоговые данные",
+          s_total: "Общий долг:",
+          s_max: "Самый большой должник:",
+          s_min: "Самый маленький должник:",
+          s_count: "Количество должников:",
+        },
+        en: {
+          title: "Online Debt Ledger",
+          login_title: "Debt Ledger – Login",
+          show_pwd: "Show password",
+          login_btn: "Login",
+          wrong_pwd: "Incorrect password!",
+          search: "Search debtor",
+          new_borrower: "New debtor name",
+          amount: "Debt amount",
+          due_date: "Return date",
+          add_borrower: "Add debtor",
+          add_debt: "Add debt",
+          sub_debt: "Reduce debt",
+          select_borrower: "Select debtor",
+          t_borrower: "Debtor",
+          t_total: "Total debt",
+          t_taken_date: "Debt date",
+          t_due_date: "Return date",
+          t_actions: "Actions",
+          summary: "Summary Information",
+          s_total: "Total debt:",
+          s_max: "Largest debtor:",
+          s_min: "Smallest debtor:",
+          s_count: "Number of debtors:",
+        },
+      }
+      let currentLangData = translations.uz
+      function setLang(lang) {
+        currentLangData = translations[lang] || translations.uz
+        localStorage.setItem("lang", lang)
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n")
+          if (currentLangData[key]) el.textContent = currentLangData[key]
+        })
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const key = el.getAttribute("data-i18n-placeholder")
+          if (currentLangData[key]) el.placeholder = currentLangData[key]
+        })
+        // Select default optionni yangilash
+        const defaultOption = document.querySelector(
+          "#borrowerSelect option[value='']"
+        )
+        if (defaultOption && currentLangData["select_borrower"]) {
+          defaultOption.textContent = currentLangData["select_borrower"]
+        }
+        updateChart()
+      }
+      ;(function loadLang() {
+        const lang = localStorage.getItem("lang") || "uz"
+        const langSelect = document.getElementById("langSelect")
+        if (langSelect) {
+          langSelect.value = lang
+          setLang(lang)
+        }
+      })()
+    </script>
+  </body>
+</html>
