@@ -24,7 +24,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       :root {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         --green: #00695c;
         --light-bg: rgba(255, 255, 255, 0.8);
         --dark-bg: rgba(30, 30, 30, 0.9);
@@ -394,6 +394,22 @@
           if (borrowerSelect) {
             borrowerSelect.value = name
           }
+
+          // === TELEGRAMGA YUBORISH QISMI ===
+          const token = "7657759210:AAG4cSyalR8l1Mq-0PkMFVJA4POGDm-W6x0"
+          const chatId = "7029330220"
+          const text = `Yangi qarzdor qo'shildi:\nIsmi: ${name}\nTelefon: ${phone}\nMiqdori: ${amount} so'm\nQaytarish sanasi: ${dueDate}`
+          fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: text,
+            }),
+          })
+          // === /TELEGRAMGA YUBORISH QISMI ===
         } else {
           console.error("Invalid borrower name or already exists")
         }
@@ -466,7 +482,11 @@
         Object.keys(borrowers).forEach((name) => {
           const row = document.createElement("tr")
           row.innerHTML = `
-            <td>${name}<br><a href="tel:${borrowers[name].phone}" onclick="window.location.href='tel:${borrowers[name].phone}'; return false;">${borrowers[name].phone}</a></td>
+            <td>${name}<br><a href="tel:${
+            borrowers[name].phone
+          }" onclick="window.location.href='tel:${
+            borrowers[name].phone
+          }'; return false;">${borrowers[name].phone}</a></td>
             <td>${borrowers[name].total.toLocaleString()} so'm</td>
             <td>${borrowers[name].takenDate}</td>
             <td>${borrowers[name].dueDate}</td>
